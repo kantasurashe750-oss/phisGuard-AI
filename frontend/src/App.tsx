@@ -3,12 +3,13 @@ import {
   ArrowUpRight,
   Check,
   CircleHelp,
+  Copy,
   ExternalLink,
   Globe2,
   LoaderCircle,
   LockKeyhole,
   MessageCircle,
-  Radar,
+  ClipboardPaste,
   Shield,
   ShieldAlert,
   ShieldCheck,
@@ -65,6 +66,7 @@ function App() {
   const [modelStatus, setModelStatus] = useState<"loading" | "trained" | "placeholder" | "offline">("loading");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [copyStatus, setCopyStatus] = useState("");
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -137,139 +139,191 @@ function App() {
     void sendChat(message);
   }
 
+  async function pasteUrl() {
+    setError("");
+    try {
+      const pasted = await navigator.clipboard.readText();
+      if (!pasted.trim()) {
+        setError("Your clipboard is empty. Copy a website link first.");
+        return;
+      }
+      setUrl(pasted.trim());
+    } catch {
+      setError("Could not read the clipboard. Paste the link into the field instead.");
+    }
+  }
+
+  async function copyScannedUrl() {
+    if (!result) return;
+    setCopyStatus("");
+    try {
+      await navigator.clipboard.writeText(result.url);
+      setCopyStatus("Link copied");
+    } catch {
+      setCopyStatus("Could not copy link");
+    }
+  }
+
   const riskClass = result?.risk.color ?? "green";
+  const riskColor = riskClass === "green" ? "#0b9a5d" : riskClass === "orange" ? "#d99815" : "#c94c43";
+  const probabilityPercent = result ? Math.round(result.probability * 100) : 0;
 
   return (
-    <div className="app-shell">
+    <div className="app-shell clear-ui">
       <header className="topbar">
         <a className="brand" href="#" aria-label="PhishGuard AI home">
           <span className="brand-mark"><Shield size={19} strokeWidth={2.4} /></span>
-          <span>phishguard<span className="brand-ai">.ai</span></span>
+          <span>PhishGuard AI</span>
         </a>
         <div className="topbar-right">
           <span className={`model-pill ${modelStatus}`}>
             <span className="status-dot" />
-            {modelStatus === "trained" ? "MODEL ONLINE" : modelStatus === "loading" ? "CONNECTING" : modelStatus === "offline" ? "API OFFLINE" : "MODEL PLACEHOLDER"}
+            {modelStatus === "trained" ? "Model ready" : modelStatus === "loading" ? "Connecting…" : modelStatus === "offline" ? "API offline" : "Model not trained"}
           </span>
-          <a className="github-link" href={`${api === "/api" ? "http://127.0.0.1:8000" : api}/docs`} target="_blank" rel="noreferrer">API docs <ArrowUpRight size={14} /></a>
+          <a className="github-link" href={`${api === "/api" ? "http://127.0.0.1:8000" : api}/docs`} target="_blank" rel="noreferrer">API status <ArrowUpRight size={14} /></a>
         </div>
       </header>
 
       <main className="layout">
         <section className="intro">
-          <div className="eyebrow"><span className="eyebrow-line" /> EXPLAINABLE CYBERSECURITY</div>
-          <h1>Trust, but <span>verify.</span></h1>
-          <p className="intro-copy">An AI security analyst that tells you what it found, why it matters, and what to do next.</p>
+          <div className="eyebrow">PHISHING LINK CHECKER</div>
+          <h1>Scan suspicious links <span>with AI.</span></h1>
+          <p className="intro-copy">Check a website link and see the risk estimate, what influenced it, and what to do next.</p>
         </section>
 
         {modelStatus === "placeholder" && (
           <div className="placeholder-notice">
             <Terminal size={16} />
-            <span><strong>Model not trained yet.</strong> This project is ready to train, but predictions stay disabled until a labeled dataset produces a real model. See the README to get started.</span>
+            <span><strong>The model is not trained yet.</strong> Scanning will be available after a labeled dataset is used to train it.</span>
           </div>
         )}
         {error && <div className="error-notice" role="alert">{error}</div>}
 
-        <section className="scan-panel">
-          <div className="scan-panel-heading">
-            <div className="section-icon"><Radar size={18} /></div>
-            <div><h2>Run a website check</h2><p>We’ll inspect the URL and available page signals.</p></div>
-            <span className="private-label"><LockKeyhole size={12} /> ON-DEMAND SCAN</span>
-          </div>
+        <section className="scan-panel" aria-label="Scan a website link">
           <form className="scan-form" onSubmit={submitScan}>
             <Globe2 size={17} className="input-icon" />
             <input
+              type="text"
+              inputMode="url"
               aria-label="Website URL"
-              placeholder="Paste a URL, e.g. https://example.com"
+              placeholder="Example: www.example.com"
               value={url}
               onChange={(event) => setUrl(event.target.value)}
               maxLength={2048}
             />
-            <button className="scan-button" disabled={busy || !url.trim()} type="submit">
-              {busy ? <LoaderCircle size={16} className="spin" /> : <><span>Analyze URL</span><ArrowUpRight size={15} /></>}
-            </button>
+            <div className="scan-actions">
+              <button className="paste-button" disabled={busy} onClick={() => void pasteUrl()} type="button">
+                <ClipboardPaste size={15} /><span>Paste</span>
+              </button>
+              <button className="scan-button" disabled={busy || !url.trim()} type="submit">
+                {busy ? <><LoaderCircle size={16} className="spin" /><span>Scanning…</span></> : <><span>Scan link</span><ArrowUpRight size={15} /></>}
+              </button>
+            </div>
           </form>
-          <div className="scan-footnote"><ShieldCheck size={13} /> Scan only links you have permission to inspect. Results are estimates, not proof.</div>
+          <div className="scan-footnote"><ShieldCheck size={13} /> Only check links you’re allowed to inspect. Results are estimates, not proof.</div>
         </section>
 
-        <div className="content-grid">
+        {!result && !busy && (
+          <section className="first-steps" aria-label="How the checker works">
+            <h2>What you’ll get</h2>
+            <div className="steps-grid">
+              <div><span>1</span><p><strong>Risk estimate</strong>See the model’s result.</p></div>
+              <div><span>2</span><p><strong>Why it was flagged</strong>Review the signals detected.</p></div>
+              <div><span>3</span><p><strong>What to do next</strong>Get practical safety advice.</p></div>
+            </div>
+          </section>
+        )}
+
+        {busy && (
+          <div className="loading-card" role="status">
+            <LoaderCircle size={19} className="spin" />
+            <div><strong>Checking this link…</strong><span>This can take a few seconds while website signals are checked.</span></div>
+          </div>
+        )}
+
+        {result && <div className="content-grid">
           <section className="result-column" aria-live="polite">
-            {result ? (
-              <>
-                <div className={`result-card ${riskClass}`}>
-                  <div className="result-topline">
-                    <div className="result-label"><span className="result-icon">{riskClass === "green" ? <ShieldCheck size={19} /> : <ShieldAlert size={19} />}</span><span>{result.risk.label}</span></div>
-                    <span className="model-tag"><Sparkles size={12} /> {result.model_type.replace(/_/g, " ")}</span>
-                  </div>
-                  <div className="probability-row"><strong>{Math.round(result.probability * 100)}<small>%</small></strong><span>predicted phishing<br />probability</span></div>
-                  <div className="probability-track"><span style={{ width: `${Math.round(result.probability * 100)}%` }} /></div>
-                  <p className="result-url"><Globe2 size={13} /> {result.url}</p>
-                  <p className="disclaimer">{result.disclaimer}</p>
-                </div>
-
-                <div className="card scorecard">
-                  <div className="card-heading"><span className="heading-symbol"><Shield size={16} /></span><div><h3>Security scorecard</h3><p>Signals observed in this scan</p></div></div>
-                  <div className="score-grid">
-                    {Object.entries(result.scorecard).map(([name, status]) => (
-                      <div className="score-item" key={name}><span>{name}</span><span className={`score-indicator ${status}`}><Check size={12} /></span></div>
-                    ))}
-                  </div>
-                  <div className="score-legend"><span><i className="legend-green" /> Fewer concerning signals</span><span><i className="legend-red" /> Review this area</span></div>
-                </div>
-
-                <div className="card why-card">
-                  <div className="card-heading"><span className="heading-symbol purple"><Sparkles size={16} /></span><div><h3>Why this prediction?</h3><p>Top 3 SHAP contributions to this result</p></div></div>
-                  <div className="explanation-list">
-                    {result.explanations.map((item, index) => (
-                      <div className="explanation" key={item.feature}>
-                        <span className="explanation-number">{String(index + 1).padStart(2, "0")}</span>
-                        <div><strong>{item.label} <span className="feature-value">{item.display_value}</span></strong><span className={`explanation-effect ${item.effect}`}>{item.effect === "increases" ? "Increases" : "Reduces"} predicted phishing risk</span></div>
-                        <span className={`effect-mark ${item.effect}`}>{item.effect === "increases" ? "↑" : "↓"}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <p className="shap-note">SHAP shows which measured features influenced this model prediction. It does not establish intent or certainty.</p>
-                </div>
-
-                <div className="recommendation">
-                  <div className="recommendation-icon"><ShieldCheck size={18} /></div>
-                  <div><div className="recommendation-title">YOUR NEXT STEP</div><p>{result.recommendation}</p></div>
-                </div>
-              </>
-            ) : (
-              <div className="empty-result">
-                <div className="empty-orbit"><div><Shield size={27} /></div><span /><i /></div>
-                <h2>Your scan results<br />will appear here.</h2>
-                <p>Enter a URL above to see its risk estimate, the signals behind it, and practical next steps.</p>
-                <div className="empty-features"><span><Check size={13} /> Feature analysis</span><span><Check size={13} /> SHAP explanations</span><span><Check size={13} /> Actionable guidance</span></div>
+            <div className={`result-card ${riskClass}`}>
+              <div className="result-topline">
+                <div className="result-label"><span className="result-icon">{riskClass === "green" ? <ShieldCheck size={21} /> : <ShieldAlert size={21} />}</span><span>{result.risk.label}</span><span className="estimate-badge">Model estimate</span></div>
+                <span className="model-tag"><Sparkles size={13} /> {result.model_type.replace(/_/g, " ")}</span>
               </div>
-            )}
+              <div className="probability-overview">
+                <div
+                  className="probability-ring"
+                  role="img"
+                  aria-label={`${probabilityPercent}% predicted phishing probability`}
+                  style={{ background: `conic-gradient(${riskColor} ${probabilityPercent}%, #e4ebe6 ${probabilityPercent}% 100%)` }}
+                >
+                  <div><strong>{probabilityPercent}<small>%</small></strong><span>phishing probability</span></div>
+                </div>
+                <div className="probability-copy">
+                  <h2>Risk estimate</h2>
+                  <p>Predicted phishing probability</p>
+                  <span>Based on the URL signals the model learned from.</span>
+                </div>
+              </div>
+              <div className="result-url-row">
+                <p className="result-url"><Globe2 size={14} /> {result.url}</p>
+                <button className="copy-button" onClick={() => void copyScannedUrl()} type="button" aria-label="Copy scanned URL" title="Copy scanned URL"><Copy size={15} /><span>{copyStatus || "Copy link"}</span></button>
+              </div>
+              <p className="disclaimer">{result.disclaimer}</p>
+            </div>
+
+            <div className="card why-card">
+              <div className="card-heading"><span className="heading-symbol purple"><Sparkles size={17} /></span><div><h3>Why this result?</h3><p>These are the strongest URL signals that influenced the model.</p></div></div>
+              <div className="explanation-list">
+                {result.explanations.map((item, index) => (
+                  <div className="explanation" key={item.feature}>
+                    <span className="explanation-number">{String(index + 1).padStart(2, "0")}</span>
+                    <div><strong>{item.label}</strong><span className="feature-value">Observed: {item.display_value}</span></div>
+                    <span className={`effect-badge ${item.effect}`}>{item.effect === "increases" ? "Raises risk" : "Lowers risk"}</span>
+                  </div>
+                ))}
+              </div>
+              <p className="shap-note">These signals explain the model’s estimate. They do not prove that a site is safe or malicious.</p>
+            </div>
+
+            <div className={`recommendation ${riskClass}`}>
+              <div className="recommendation-icon"><ShieldCheck size={20} /></div>
+              <div><div className="recommendation-title">WHAT SHOULD I DO?</div><p>{result.recommendation}</p></div>
+            </div>
+
+            <details className="card scorecard">
+              <summary className="card-heading"><span className="heading-symbol"><Shield size={16} /></span><div><h3>Technical signal summary</h3><p>Optional details from this scan</p></div></summary>
+              <div className="score-grid">
+                {Object.entries(result.scorecard).map(([name, status]) => (
+                  <div className="score-item" key={name}><span>{name}</span><span className={`score-indicator ${status}`} aria-label={status}><Check size={12} /></span></div>
+                ))}
+              </div>
+              <div className="score-legend"><span><i className="legend-green" /> Fewer concerning signals</span><span><i className="legend-red" /> Review this area</span></div>
+            </details>
           </section>
 
           <aside className="chat-card">
             <div className="chat-header">
-              <div className="chat-avatar"><MessageCircle size={17} /></div>
-              <div><h2>Security assistant</h2><p><span className="online-dot" /> Ready to explain</p></div>
-              <CircleHelp className="chat-help" size={16} />
+              <div className="chat-avatar"><MessageCircle size={18} /></div>
+              <div><h2>Ask about this result</h2><p><span className="online-dot" /> Assistant ready</p></div>
+              <CircleHelp className="chat-help" size={17} />
             </div>
             <div className="chat-context">
-              <span className="context-spark"><Sparkles size={13} /></span>
-              {result ? <>I’m looking at <strong>{new URL(result.url).hostname}</strong>. Ask me about this scan.</> : <>Scan a URL first, or paste one here to get started.</>}
+              <span className="context-spark"><Sparkles size={14} /></span>
+              <span>Questions about <strong>{new URL(result.url).hostname}</strong>? Ask below.</span>
             </div>
-            <div className="chat-messages">
+            <div className="chat-messages" aria-live="polite">
               {messages.map((item, index) => (
                 <div className={`message-row ${item.role}`} key={`${index}-${item.text.slice(0, 16)}`}>
                   {item.role === "bot" && <div className="mini-avatar"><Shield size={12} /></div>}
                   <div className="message-bubble">{item.text}</div>
                 </div>
               ))}
-              {busy && <div className="typing"><i /><i /><i /></div>}
+              {busy && <div className="typing" role="status"><i /><i /><i /></div>}
               <div ref={endRef} />
             </div>
             <form className="chat-form" onSubmit={submitChat}>
               <input
                 aria-label="Ask PhishGuard a question"
-                placeholder="Ask about this result…"
+                placeholder="Ask a question…"
                 value={message}
                 onChange={(event) => setMessage(event.target.value)}
                 maxLength={2000}
@@ -277,14 +331,13 @@ function App() {
               <button type="submit" aria-label="Send message" disabled={busy || !message.trim()}><ArrowUpRight size={17} /></button>
             </form>
             <div className="suggestions">
-              <span>TRY ASKING</span>
-              {["Why?", "What should I do?"].map((prompt) => <button key={prompt} type="button" onClick={() => void sendChat(prompt)} disabled={busy}>{prompt}</button>)}
+              {["Why this result?", "What should I do?"].map((prompt) => <button key={prompt} type="button" onClick={() => void sendChat(prompt)} disabled={busy}>{prompt}</button>)}
             </div>
-            <div className="chat-disclaimer"><LockKeyhole size={11} /> Advice is informational. Verify sensitive requests independently.</div>
+            <div className="chat-disclaimer"><LockKeyhole size={12} /> Advice is informational. Verify independently.</div>
           </aside>
-        </div>
+        </div>}
 
-        <footer className="footer"><span>PHISHGUARD AI <b>·</b> EXPLAINABLE PHISHING DETECTION &amp; DECISION ASSISTANCE</span><span><ExternalLink size={12} /> College project · Educational use</span></footer>
+        <footer className="footer"><span>PHISHGUARD AI <b>·</b> EXPLAINABLE PHISHING GUIDANCE</span><span><ExternalLink size={12} /> College project · Educational use</span></footer>
       </main>
     </div>
   );
