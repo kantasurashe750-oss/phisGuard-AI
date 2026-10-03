@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+*.tsbuildinfo
+.pytest_cache/
+.venv/
+venv/
+node_modules/
+dist/
+*.pkl
+*.joblib
+backend/models/*
+!backend/models/.gitkeep
+!backend/models/phishing_model.pkl
+backend/data/*.sqlite3
+data/*
+!data/.gitkeep
+.env

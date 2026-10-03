@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: phishguard-api
+    runtime: python
+    plan: starter
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: DATABASE_URL
+        sync: false
+      - key: PHISHGUARD_CORS_ORIGINS
+        value: https://phishguard-frontend.onrender.com
+
+  - type: web
+    name: phishguard-frontend
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_BASE_URL
+        value: https://phishguard-api.onrender.com
