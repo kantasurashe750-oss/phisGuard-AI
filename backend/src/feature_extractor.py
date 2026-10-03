@@ -43,6 +43,14 @@ FEATURE_NAMES = [
     "suspicious_js_count", "password_field_count",
 ]
 
+LEXICAL_FEATURE_NAMES = [
+    "url_length", "hostname_length", "path_length", "query_length",
+    "ip_address", "has_at_symbol", "has_hyphen", "dot_count",
+    "subdomain_count", "is_shortened", "suspicious_keyword_count",
+    "https_token_in_url", "special_char_count", "digit_count",
+    "has_punycode",
+]
+
 FEATURE_LABELS = {
     "url_length": "Unusually long URL",
     "hostname_length": "Long domain name",
@@ -139,6 +147,37 @@ def _domain_parts(hostname: str) -> Tuple[str, int]:
     registered = extracted.registered_domain or hostname
     subdomain_count = len([part for part in extracted.subdomain.split(".") if part])
     return registered, subdomain_count
+
+
+def extract_url_features(value: str) -> Dict[str, float]:
+    """Extract URL-only features without making network requests."""
+    url = normalize_url(value)
+    parsed = urlparse(url)
+    if not parsed.path:
+        parsed = parsed._replace(path="/")
+        url = parsed.geturl()
+    hostname = (parsed.hostname or "").lower()
+    _, subdomain_count = _domain_parts(hostname)
+    keyword_count = sum(
+        1 for keyword in SUSPICIOUS_KEYWORDS if keyword in url.lower()
+    )
+    return {
+        "url_length": float(len(url)),
+        "hostname_length": float(len(hostname)),
+        "path_length": float(len(parsed.path)),
+        "query_length": float(len(parsed.query)),
+        "ip_address": float(_is_ip(hostname)),
+        "has_at_symbol": float("@" in url),
+        "has_hyphen": float("-" in hostname),
+        "dot_count": float(hostname.count(".")),
+        "subdomain_count": float(subdomain_count),
+        "is_shortened": float(hostname in SHORTENERS),
+        "suspicious_keyword_count": float(keyword_count),
+        "https_token_in_url": float("https" in (parsed.netloc + parsed.path).lower()),
+        "special_char_count": float(len(re.findall(r"[=_%&?]", url))),
+        "digit_count": float(sum(character.isdigit() for character in url)),
+        "has_punycode": float("xn--" in hostname),
+    }
 
 
 def _is_ip(hostname: str) -> bool:
@@ -342,7 +381,7 @@ def extract_features(value: str) -> Dict[str, float]:
     parsed = urlparse(url)
     hostname = (parsed.hostname or "").lower()
     registered_domain, subdomain_count = _domain_parts(hostname)
-    path_query = f"{parsed.path}?{parsed.query}"
+    lexical_features = extract_url_features(url)
 
     public_host = _has_public_dns(hostname)
     age_days, whois_available = (
@@ -388,26 +427,8 @@ def extract_features(value: str) -> Dict[str, float]:
         not in {"", page_host}
     )
     js_text = " ".join(script.get_text(" ", strip=True) for script in soup.find_all("script")) if soup else ""
-    keyword_count = sum(
-        1 for keyword in SUSPICIOUS_KEYWORDS if keyword in url.lower()
-    )
-
     return {
-        "url_length": float(len(url)),
-        "hostname_length": float(len(hostname)),
-        "path_length": float(len(parsed.path)),
-        "query_length": float(len(parsed.query)),
-        "ip_address": float(_is_ip(hostname)),
-        "has_at_symbol": float("@" in url),
-        "has_hyphen": float("-" in hostname),
-        "dot_count": float(hostname.count(".")),
-        "subdomain_count": float(subdomain_count),
-        "is_shortened": float(hostname in SHORTENERS),
-        "suspicious_keyword_count": float(keyword_count),
-        "https_token_in_url": float("https" in (parsed.netloc + parsed.path).lower()),
-        "special_char_count": float(len(re.findall(r"[=_%&?]", url))),
-        "digit_count": float(sum(character.isdigit() for character in url)),
-        "has_punycode": float("xn--" in hostname),
+        **lexical_features,
         "domain_age_days": float(age_days),
         "whois_available": float(whois_available),
         "dns_resolves": float(dns_resolves),

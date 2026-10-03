@@ -1,10 +1,10 @@
 # PhishGuard AI – Explainable Phishing Detection Chatbot
 
-An educational project demonstrating 30 URL/webpage features, supervised phishing classification, SHAP explanations, and cautious next-step advice. Its focus is **detection + explanation + actionable security guidance**, not a claim that an AI can prove a website safe or malicious.
+An educational project demonstrating URL/webpage feature extraction, supervised phishing classification, SHAP explanations, and cautious next-step advice. Its focus is **detection + explanation + actionable security guidance**, not a claim that an AI can prove a website safe or malicious. The model currently trains on 15 lexical URL features; DNS/TLS/domain/page signals are also extracted for the scorecard and recommendation, but are not inputs to this model.
 
 ## Current model status
 
-The repository intentionally contains **no trained model and no invented performance numbers**. The UI and API report a placeholder model state until you train a model from a real, labeled dataset. While it is untrained, `/scan` returns HTTP 503 with an explicit `model_not_trained` response instead of producing a made-up score. No fabricated sample dataset or model artifact is included.
+The source repository does not guarantee that a trained model artifact is present. The UI and API report a placeholder model state until you train a model from a real, labeled dataset. While it is untrained, `/scan` returns HTTP 503 with an explicit `model_not_trained` response instead of producing a made-up score. No fabricated sample dataset or model artifact is included.
 
 ## Project structure
 
@@ -48,22 +48,25 @@ pip install -r requirements.txt
 
 If PowerShell blocks virtual-environment activation, run the venv's interpreter directly, for example `.\.venv\Scripts\python.exe -m pip install -r requirements.txt`.
 
-## 2. Prepare data and train/evaluate
+## 2. Train and evaluate
 
-Place your dataset at `data\phishing_urls.csv`. It must have:
-
-- `url`: a complete website URL (a missing scheme is treated as HTTPS).
-- `label`: `0` for legitimate and `1` for phishing.
-
-Use only correctly labeled examples from a dataset whose license and use terms you have checked. Training and live scans call the **same** `extract_features` function; domain, DNS, TLS, and page checks make training network-dependent and can take time. Every model is evaluated on a stratified held-out split; accuracy, precision, recall, F1, ROC-AUC, and the confusion matrix are printed from that run and stored in the artifact. These values are not pre-filled or guaranteed.
+The trainer accepts either `url,label` columns with `0`=legitimate and `1`=phishing, or the Kaggle-style `URL,Label` columns with `good`/`bad` labels. For example, put the Kaggle file at `data\phishing_site_urls.csv`, then run:
 
 ```powershell
-python -m backend.src.train --data data\phishing_urls.csv --model xgboost
+.\.venv\Scripts\python.exe -m backend.src.train --data data\phishing_site_urls.csv --model xgboost
 ```
 
-Supported `--model` choices are `xgboost` (default/preferred), `random_forest`, and `logistic_regression`. All available candidates are evaluated; the selected model and its real holdout metrics are saved to `backend\models\phishing_model.pkl`. If using logistic regression, the stored scaler and linear SHAP explainer are used at prediction time.
+By default, training takes a reproducible, label-stratified sample of up to 50,000 unique URLs, extracts URL-only lexical features without contacting websites, and holds out entire registered domains using a stratified group split. The live scanner uses the same URL feature function as training, avoiding differences caused by site availability or changing DNS/page content. It still extracts network and page signals for the scorecard and recommendation. SHAP explanations describe the URL features used by the model; the recommendation may additionally refer to live scan signals. You can change the sample limit with `--max-rows`; `--max-rows 0` uses all unique rows and may take longer.
 
-The optional [model training notebook](./notebooks/model_training.ipynb) invokes the same Python training function; it does not contain a separate feature implementation or placeholder metrics.
+The held-out split measures performance on domains not used for fitting. It is more informative than a random row split, but it is still drawn from the same dataset and does not establish current real-world accuracy. Predicted probabilities reflect the training data and should not be treated as perfectly calibrated for live traffic.
+
+```powershell
+.\.venv\Scripts\python.exe -m backend.src.train --data data\phishing_urls.csv --model xgboost
+```
+
+Supported models are `xgboost` (default), `random_forest`, and `logistic_regression`. All installed candidates are evaluated; metrics and domain-split counts are printed and saved. The selected model artifact is saved to `backend\models\phishing_model.pkl`. These metrics are results for that run, not a guarantee of performance on current real-world attacks.
+
+The optional [model training notebook](./notebooks/model_training.ipynb) invokes the same training function.
 
 ## 3. Run the API
 

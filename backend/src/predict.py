@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 import shap
 
-from .feature_extractor import FEATURE_LABELS, FEATURE_NAMES
+from .feature_extractor import FEATURE_LABELS, FEATURE_NAMES, LEXICAL_FEATURE_NAMES
 
 MODEL_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "models", "phishing_model.pkl")
 
@@ -37,7 +37,8 @@ class PhishingPredictor:
         artifact = joblib.load(self.model_path)
         if not isinstance(artifact, dict) or not artifact.get("trained"):
             raise ValueError("The model artifact is invalid or marked untrained.")
-        if artifact.get("feature_names") != FEATURE_NAMES:
+        feature_names = artifact.get("feature_names")
+        if feature_names not in (FEATURE_NAMES, LEXICAL_FEATURE_NAMES):
             raise ValueError("Model feature schema does not match the live feature extractor.")
         self.artifact = artifact
         if artifact["model_type"] == "logistic_regression":
@@ -55,7 +56,10 @@ class PhishingPredictor:
             raise ModelNotTrainedError(
                 "No trained model is available. Train one from a labeled URL dataset first."
             )
-        row = pd.DataFrame([[features[name] for name in FEATURE_NAMES]], columns=FEATURE_NAMES)
+        feature_names = self.artifact["feature_names"]
+        row = pd.DataFrame(
+            [[features[name] for name in feature_names]], columns=feature_names
+        )
         model = self.artifact["model"]
         probability = float(model.predict_proba(row)[0][1])
         explanation_row = row
@@ -71,7 +75,7 @@ class PhishingPredictor:
             else:
                 contributions = values.reshape(-1)
         ranked = sorted(
-            zip(FEATURE_NAMES, contributions.tolist()),
+            zip(feature_names, contributions.tolist()),
             key=lambda item: abs(item[1]),
             reverse=True,
         )[:3]

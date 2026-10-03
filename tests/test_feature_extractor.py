@@ -1,11 +1,40 @@
 import pytest
 
-from backend.src.feature_extractor import FEATURE_NAMES, extract_features, normalize_url
+from backend.src.feature_extractor import (
+    FEATURE_NAMES,
+    LEXICAL_FEATURE_NAMES,
+    extract_features,
+    extract_url_features,
+    normalize_url,
+)
 
 
 def test_feature_schema_has_thirty_named_features():
     assert len(FEATURE_NAMES) == 30
     assert len(set(FEATURE_NAMES)) == 30
+
+
+def test_lexical_features_are_a_subset_of_live_feature_extraction(monkeypatch):
+    monkeypatch.setattr(
+        "backend.src.feature_extractor._domain_registration", lambda domain: (365, 1)
+    )
+    monkeypatch.setattr("backend.src.feature_extractor._has_public_dns", lambda host: True)
+    monkeypatch.setattr("backend.src.feature_extractor._check_tls", lambda host, port: (True, True))
+    monkeypatch.setattr(
+        "backend.src.feature_extractor._safe_page",
+        lambda url, initially_public: ("", url, False),
+    )
+    url = "https://login.example.com/verify?id=123"
+    lexical = extract_url_features(url)
+    live = extract_features(url)
+    assert list(lexical) == LEXICAL_FEATURE_NAMES
+    assert lexical == {name: live[name] for name in LEXICAL_FEATURE_NAMES}
+
+
+def test_root_url_with_or_without_trailing_slash_has_same_lexical_features():
+    assert extract_url_features("https://www.example.com") == extract_url_features(
+        "https://www.example.com/"
+    )
 
 
 @pytest.mark.parametrize(
