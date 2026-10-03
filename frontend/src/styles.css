@@ -389,3 +389,128 @@ h1 span { color: #73e5a8; }
   .clear-ui *::before,
   .clear-ui *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; }
 }
+
+body { color: #e5ece8; background: #0b1110; }
+.clear-ui { color: #e5ece8; --muted: #98a69e; --line: #26332d; --panel: #111916; --green: #69dfa0; }
+.clear-ui .topbar { border-color: #25312b; background: #0d1411; }
+.clear-ui .brand { color: #eef5f0; }
+.clear-ui .brand-mark { color: #69dfa0; border-color: #315540; background: #172b20; }
+.clear-ui .model-pill { color: #b6c1ba; border-color: #34433a; background: #111916; }
+.clear-ui .model-pill.trained { color: #79e4a7; border-color: #315c40; background: #132219; }
+.clear-ui .model-pill.placeholder { color: #f0cb72; border-color: #65552e; background: #211d13; }
+.clear-ui .model-pill.offline { color: #f3948c; border-color: #603936; background: #241817; }
+.clear-ui .status-dot { background: #d7ad4b; }
+.clear-ui .trained .status-dot { background: #69dfa0; }
+.clear-ui .offline .status-dot { background: #e36f6c; }
+.clear-ui .github-link { color: #a8b5ad; }
+.clear-ui .layout { max-width: 1080px; padding-top: 67px; }
+.clear-ui .intro { text-align: center; }
+.clear-ui h1 { max-width: 800px; color: #edf4ef; font-size: clamp(36px, 6vw, 56px); letter-spacing: -2.3px; }
+.clear-ui h1 span { background: linear-gradient(95deg, #69dfa0 8%, #9af0bd 95%); background-clip: text; -webkit-text-fill-color: transparent; }
+.clear-ui .intro-copy { color: #a3b0a8; font-size: 15px; }
+.clear-ui .placeholder-notice { border-color: #65552e; background: #211d13; color: #e6d299; }
+.clear-ui .placeholder-notice strong { color: #f3d88d; }
+.clear-ui .placeholder-notice svg { color: #e6bd5c; }
+.clear-ui .error-notice { border-color: #633c38; background: #241817; color: #f0aaa3; }
+.clear-ui .scan-panel { margin-top: 38px; }
+.clear-ui .scan-form { min-height: 96px; padding: 12px 13px 12px 28px; border-color: #35443b; border-radius: 18px; background: #111916; box-shadow: 0 12px 40px #0004; }
+.clear-ui .scan-form:focus-within { border-color: #54866a; box-shadow: 0 0 0 3px #69dfa01a, 0 12px 40px #0004; }
+.clear-ui .input-icon { width: 21px; height: 21px; color: #8da096; }
+.clear-ui .scan-form input,
+.clear-ui .chat-form input { color: #e8f0eb; }
+.clear-ui .scan-form input::placeholder,
+.clear-ui .chat-form input::placeholder { color: #84938a; }
+.clear-ui .scan-actions { gap: 9px; }
+.clear-ui .paste-button,
+.clear-ui .copy-button { border-color: #3a4940; background: #151e19; color: #c1cec5; }
+.clear-ui .paste-button:hover,
+.clear-ui .copy-button:hover { border-color: #508363; background: #1a2b20; color: #8be4ad; }
+.clear-ui .scan-button { min-width: 136px; height: 66px; justify-content: center; border-radius: 11px; background: #58d391; color: #092216; font-size: 16px; }
+.clear-ui .scan-button:hover { background: #78e5a8; }
+.clear-ui .scan-footnote { color: #89978e; font-size: 11px; }
+.clear-ui .scan-footnote svg { color: #69dfa0; }
+.clear-ui .empty-hint { margin: 24px 0; color: #98a69e; text-align: center; font: 500 12px "DM Mono", monospace; letter-spacing: .3px; }
+.clear-ui .loading-card { border-color: #31543d; background: #132219; color: #79e4a7; }
+.clear-ui .loading-card strong { color: #e1eee5; }
+.clear-ui .loading-card span { color: #a3b0a8; }
+.clear-ui .card,
+.clear-ui .chat-card { border-color: #29362f; background: #111916; box-shadow: 0 6px 20px #0002; }
+.clear-ui .result-card { border-color: #31543d; background: linear-gradient(145deg, #14251b, #111916 78%); }
+.clear-ui .result-card.orange { border-color: #59482a; background: linear-gradient(145deg, #282216, #151713 78%); }
+.clear-ui .result-card.red { border-color: #603936; background: linear-gradient(145deg, #281817, #161514 78%); }
+.clear-ui .result-label { color: #7de6a8; }
+.clear-ui .orange .result-label { color: #f0c36b; }
+.clear-ui .red .result-label { color: #f18b83; }
+.clear-ui .estimate-badge { border-color: #37463d; color: #b2beb6; background: #17201a; }
+.clear-ui .model-tag { color: #a3b0a8; }
+.clear-ui .probability-ring > div { border-color: #334139; background: #111916; }
+.clear-ui .probability-ring strong { color: #eef4ef; }
+.clear-ui .probability-ring span { color: #a3b0a8; }
+.clear-ui .probability-copy h2 { color: #eef4ef; }
+.clear-ui .probability-copy p { color: #d2ddd5; }
+.clear-ui .probability-copy > span { color: #a3b0a8; }
+.clear-ui .result-url-row { border-color: #334139; background: #0d1411; }
+.clear-ui .result-url { color: #c4d0c8; }
+.clear-ui .result-url svg { color: #78d99e; }
+.clear-ui .disclaimer { border-color: #2a3830; color: #a0ada5; }
+.clear-ui .card-heading h3 { color: #e5ece8; }
+.clear-ui .card-heading p { color: #a0ada5; }
+.clear-ui .heading-symbol { color: #78dfa4; background: #1a3021; }
+.clear-ui .heading-symbol.purple { color: #b9acf4; background: #29243b; }
+.clear-ui .explanation { border-color: #29362f; }
+.clear-ui .explanation-number { color: #a1a9c3; }
+.clear-ui .explanation strong { color: #e0e8e2; }
+.clear-ui .feature-value { color: #a4b0a8; }
+.clear-ui .effect-badge.increases { color: #f19991; background: #34201f; }
+.clear-ui .effect-badge.reduces { color: #83dfa5; background: #1a3021; }
+.clear-ui .shap-note { border-color: #29362f; color: #9aa79f; }
+.clear-ui .recommendation { border-color: #31543d; background: #132219; }
+.clear-ui .recommendation.orange { border-color: #59482a; background: #211d13; }
+.clear-ui .recommendation.red { border-color: #603936; background: #241817; }
+.clear-ui .recommendation-icon,
+.clear-ui .recommendation-title { color: #7de0a4; }
+.clear-ui .recommendation.orange .recommendation-icon,
+.clear-ui .recommendation.orange .recommendation-title { color: #edc36e; }
+.clear-ui .recommendation.red .recommendation-icon,
+.clear-ui .recommendation.red .recommendation-title { color: #f18b83; }
+.clear-ui .recommendation p { color: #cfdbd2; }
+.clear-ui .scorecard summary::after { color: #a8b5ad; }
+.clear-ui .score-item { border-color: #29362f; color: #c5d0c8; }
+.clear-ui .score-legend { color: #9aa79f; }
+.clear-ui .chat-header,
+.clear-ui .chat-context,
+.clear-ui .chat-disclaimer { border-color: #29362f; }
+.clear-ui .chat-avatar,
+.clear-ui .mini-avatar { border-color: #315540; color: #79dfa4; background: #172b20; }
+.clear-ui .chat-header h2 { color: #e5ece8; }
+.clear-ui .chat-header p,
+.clear-ui .chat-help,
+.clear-ui .chat-context { color: #a3b0a8; }
+.clear-ui .chat-context strong { color: #e0e8e2; }
+.clear-ui .message-bubble { border-color: #303d35; background: #17201a; color: #d0dbd3; }
+.clear-ui .message-row.user .message-bubble { border-color: #315c40; background: #1a3021; color: #d3f0dc; }
+.clear-ui .chat-form { border-color: #38463d; background: #0d1411; }
+.clear-ui .chat-form button { background: #58d391; color: #092216; }
+.clear-ui .suggestions button { border-color: #37463d; color: #c2cec6; background: #151e19; }
+.clear-ui .suggestions button:hover { border-color: #508363; color: #8be4ad; background: #1a2b20; }
+.clear-ui .chat-disclaimer { color: #98a69e; }
+.clear-ui .footer { color: #8f9d94; }
+.clear-ui .footer b { color: #69dfa0; }
+
+@media (max-width: 620px) {
+  .clear-ui .layout { padding: 42px 15px 20px; }
+  .clear-ui h1 { font-size: clamp(34px, 8vw, 44px); }
+  .clear-ui .intro-copy { font-size: 14px; }
+  .clear-ui .scan-panel { margin-top: 27px; }
+  .clear-ui .scan-form { min-height: 76px; padding: 8px; }
+  .clear-ui .scan-form input { min-height: 47px; font-size: 15px; }
+  .clear-ui .scan-actions { width: 100%; }
+  .clear-ui .paste-button { flex: 1; height: 46px; }
+  .clear-ui .scan-button { flex: 2; min-width: 0; height: 46px; }
+  .clear-ui .scan-footnote { justify-content: center; }
+  .clear-ui .result-card { padding: 18px 15px; }
+  .clear-ui .probability-ring { width: 104px; height: 104px; }
+  .clear-ui .probability-ring strong { font-size: 27px; }
+  .clear-ui .probability-overview { gap: 12px; }
+  .clear-ui .probability-copy h2 { font-size: 16px; }
+}

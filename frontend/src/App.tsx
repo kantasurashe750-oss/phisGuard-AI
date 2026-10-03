@@ -60,7 +60,7 @@ function App() {
   const [url, setUrl] = useState("");
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<Message[]>([
-    { role: "bot", text: "Hi, I’m PhishGuard AI. Paste a website URL to scan it, then ask me why it was flagged or what to do next." },
+    { role: "bot", text: "Scan a link to begin." },
   ]);
   const [result, setResult] = useState<ScanResult | null>(null);
   const [modelStatus, setModelStatus] = useState<"loading" | "trained" | "placeholder" | "offline">("loading");
@@ -186,9 +186,8 @@ function App() {
 
       <main className="layout">
         <section className="intro">
-          <div className="eyebrow">PHISHING LINK CHECKER</div>
-          <h1>Scan suspicious links <span>with AI.</span></h1>
-          <p className="intro-copy">Check a website link and see the risk estimate, what influenced it, and what to do next.</p>
+          <h1>Check a link <span>before you click.</span></h1>
+          <p className="intro-copy">AI risk check. Clear next steps.</p>
         </section>
 
         {modelStatus === "placeholder" && (
@@ -206,7 +205,7 @@ function App() {
               type="text"
               inputMode="url"
               aria-label="Website URL"
-              placeholder="Example: www.example.com"
+              placeholder="Paste a link to scan"
               value={url}
               onChange={(event) => setUrl(event.target.value)}
               maxLength={2048}
@@ -216,28 +215,21 @@ function App() {
                 <ClipboardPaste size={15} /><span>Paste</span>
               </button>
               <button className="scan-button" disabled={busy || !url.trim()} type="submit">
-                {busy ? <><LoaderCircle size={16} className="spin" /><span>Scanning…</span></> : <><span>Scan link</span><ArrowUpRight size={15} /></>}
+                {busy ? <><LoaderCircle size={16} className="spin" /><span>Scanning…</span></> : <><span>Scan</span><ArrowUpRight size={15} /></>}
               </button>
             </div>
           </form>
-          <div className="scan-footnote"><ShieldCheck size={13} /> Only check links you’re allowed to inspect. Results are estimates, not proof.</div>
+          <div className="scan-footnote"><ShieldCheck size={13} /> Estimates only · not proof</div>
         </section>
 
         {!result && !busy && (
-          <section className="first-steps" aria-label="How the checker works">
-            <h2>What you’ll get</h2>
-            <div className="steps-grid">
-              <div><span>1</span><p><strong>Risk estimate</strong>See the model’s result.</p></div>
-              <div><span>2</span><p><strong>Why it was flagged</strong>Review the signals detected.</p></div>
-              <div><span>3</span><p><strong>What to do next</strong>Get practical safety advice.</p></div>
-            </div>
-          </section>
+          <p className="empty-hint">Risk&nbsp; · &nbsp;Why&nbsp; · &nbsp;What next</p>
         )}
 
         {busy && (
           <div className="loading-card" role="status">
             <LoaderCircle size={19} className="spin" />
-            <div><strong>Checking this link…</strong><span>This can take a few seconds while website signals are checked.</span></div>
+            <div><strong>Scanning…</strong><span>Checking available signals</span></div>
           </div>
         )}
 
@@ -271,7 +263,7 @@ function App() {
             </div>
 
             <div className="card why-card">
-              <div className="card-heading"><span className="heading-symbol purple"><Sparkles size={17} /></span><div><h3>Why this result?</h3><p>These are the strongest URL signals that influenced the model.</p></div></div>
+              <div className="card-heading"><span className="heading-symbol purple"><Sparkles size={17} /></span><div><h3>Why this result?</h3><p>Top signals detected</p></div></div>
               <div className="explanation-list">
                 {result.explanations.map((item, index) => (
                   <div className="explanation" key={item.feature}>
@@ -281,7 +273,7 @@ function App() {
                   </div>
                 ))}
               </div>
-              <p className="shap-note">These signals explain the model’s estimate. They do not prove that a site is safe or malicious.</p>
+              <p className="shap-note">Signals explain the estimate; they don’t prove safety or harm.</p>
             </div>
 
             <div className={`recommendation ${riskClass}`}>
@@ -290,7 +282,7 @@ function App() {
             </div>
 
             <details className="card scorecard">
-              <summary className="card-heading"><span className="heading-symbol"><Shield size={16} /></span><div><h3>Technical signal summary</h3><p>Optional details from this scan</p></div></summary>
+              <summary className="card-heading"><span className="heading-symbol"><Shield size={16} /></span><div><h3>Scan details</h3></div></summary>
               <div className="score-grid">
                 {Object.entries(result.scorecard).map(([name, status]) => (
                   <div className="score-item" key={name}><span>{name}</span><span className={`score-indicator ${status}`} aria-label={status}><Check size={12} /></span></div>
@@ -303,12 +295,12 @@ function App() {
           <aside className="chat-card">
             <div className="chat-header">
               <div className="chat-avatar"><MessageCircle size={18} /></div>
-              <div><h2>Ask about this result</h2><p><span className="online-dot" /> Assistant ready</p></div>
+              <div><h2>Ask PhishGuard</h2><p><span className="online-dot" /> Ready</p></div>
               <CircleHelp className="chat-help" size={17} />
             </div>
             <div className="chat-context">
               <span className="context-spark"><Sparkles size={14} /></span>
-              <span>Questions about <strong>{new URL(result.url).hostname}</strong>? Ask below.</span>
+              <span>About <strong>{new URL(result.url).hostname}</strong></span>
             </div>
             <div className="chat-messages" aria-live="polite">
               {messages.map((item, index) => (
@@ -323,7 +315,7 @@ function App() {
             <form className="chat-form" onSubmit={submitChat}>
               <input
                 aria-label="Ask PhishGuard a question"
-                placeholder="Ask a question…"
+                placeholder="Ask why or what next"
                 value={message}
                 onChange={(event) => setMessage(event.target.value)}
                 maxLength={2000}
@@ -331,9 +323,9 @@ function App() {
               <button type="submit" aria-label="Send message" disabled={busy || !message.trim()}><ArrowUpRight size={17} /></button>
             </form>
             <div className="suggestions">
-              {["Why this result?", "What should I do?"].map((prompt) => <button key={prompt} type="button" onClick={() => void sendChat(prompt)} disabled={busy}>{prompt}</button>)}
+              {["Why?", "What next?"].map((prompt) => <button key={prompt} type="button" onClick={() => void sendChat(prompt)} disabled={busy}>{prompt}</button>)}
             </div>
-            <div className="chat-disclaimer"><LockKeyhole size={12} /> Advice is informational. Verify independently.</div>
+            <div className="chat-disclaimer"><LockKeyhole size={12} /> Verify important links independently.</div>
           </aside>
         </div>}
 
